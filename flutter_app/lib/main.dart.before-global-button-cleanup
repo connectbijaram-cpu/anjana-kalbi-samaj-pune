@@ -1,0 +1,1644 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const AnjanaKalbiSamajApp());
+}
+
+// =========================
+// APP COLORS
+// =========================
+
+class AppLanguage extends ChangeNotifier {
+  static final AppLanguage instance = AppLanguage._();
+
+  AppLanguage._();
+
+  bool isHindi = true;
+
+  void setHindi() {
+    if (!isHindi) {
+      isHindi = true;
+      notifyListeners();
+    }
+  }
+
+  void setEnglish() {
+    if (isHindi) {
+      isHindi = false;
+      notifyListeners();
+    }
+  }
+
+  void toggle() {
+    isHindi ? setEnglish() : setHindi();
+  }
+}
+
+class AppColors {
+  static const maroon = Color(0xFF8B0018);
+  static const darkMaroon = Color(0xFF5C0010);
+  static const gold = Color(0xFFFFC400);
+  static const lightGold = Color(0xFFFFE8A3);
+  static const cream = Color(0xFFFFF8E8);
+  static const white = Colors.white;
+  static const blue = Color(0xFF124B8C);
+  static const green = Color(0xFF237A3B);
+}
+
+// =========================
+// APP
+// =========================
+
+class AnjanaKalbiSamajApp extends StatelessWidget {
+  const AnjanaKalbiSamajApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AppLanguage.instance,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: AppLanguage.instance.isHindi
+              ? 'अंजण कळबी समाज'
+              : 'Anjana Kalbi Samaj',
+          theme: ThemeData(
+            useMaterial3: true,
+            fontFamily: 'sans',
+            colorScheme: ColorScheme.fromSeed(seedColor: AppColors.maroon),
+          ),
+          home: const SplashScreen(),
+        );
+      },
+    );
+  }
+}
+
+// =========================
+// SPLASH SCREEN
+// =========================
+
+class GlobalLanguageButton extends StatelessWidget {
+  const GlobalLanguageButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AppLanguage.instance,
+      builder: (context, child) {
+        final isHindi = AppLanguage.instance.isHindi;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: AppColors.gold, width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: AppLanguage.instance.setHindi,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isHindi ? AppColors.maroon : Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Text(
+                    'हिन्दी',
+                    style: TextStyle(
+                      color: isHindi ? Colors.white : AppColors.maroon,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: AppLanguage.instance.setEnglish,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: !isHindi ? AppColors.blue : Colors.white,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: Text(
+                    'English',
+                    style: TextStyle(
+                      color: !isHindi ? Colors.white : AppColors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.darkMaroon,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // LOGO PLACEHOLDER
+              Container(
+                width: 145,
+                height: 145,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.gold,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black45,
+                      blurRadius: 18,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.account_balance,
+                    size: 70,
+                    color: AppColors.maroon,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 35),
+
+              const Text(
+                'आंजणा कलबी समाज',
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 31,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'एकता • सेवा • संस्कार',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  letterSpacing: 1.2,
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              Container(width: 230, height: 1, color: AppColors.gold),
+
+              const SizedBox(height: 25),
+
+              const Text(
+                'समाज की डिजिटल पहचान',
+                style: TextStyle(color: Colors.white, fontSize: 17),
+              ),
+
+              const SizedBox(height: 50),
+
+              const SizedBox(
+                width: 30,
+                height: 30,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.gold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =========================
+// LOGIN SCREEN
+// =========================
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  bool obscurePassword = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.darkMaroon,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: GlobalLanguageButton(),
+              ),
+              const SizedBox(height: 20),
+
+              const SizedBox(height: 45),
+
+              // Logo
+              Container(
+                width: 115,
+                height: 115,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.gold,
+                  border: Border.all(color: Colors.white, width: 3),
+                ),
+                child: const Icon(
+                  Icons.account_balance,
+                  size: 55,
+                  color: AppColors.maroon,
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              const Text(
+                'आंजणा कलबी समाज',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontSize: 29,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 5),
+
+              const Text(
+                'पुणे',
+                style: TextStyle(color: Colors.white70, fontSize: 19),
+              ),
+
+              const SizedBox(height: 50),
+
+              _input(
+                controller: usernameController,
+                hint: 'यूज़रनेम / Username',
+                icon: Icons.person_outline,
+              ),
+
+              const SizedBox(height: 18),
+
+              _passwordInput(),
+
+              const SizedBox(height: 28),
+
+              SizedBox(
+                width: double.infinity,
+                height: 58,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: AppColors.darkMaroon,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DashboardScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'लॉगिन करें',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 35),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'नए सदस्य?',
+                    style: TextStyle(color: Colors.white70, fontSize: 17),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const RegistrationChoiceScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'रजिस्टर करें',
+                      style: TextStyle(
+                        color: AppColors.gold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'आंजणा कलबी समाज • पुणे',
+                style: TextStyle(color: Colors.white38, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _input({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+  }) {
+    return TextField(
+      controller: controller,
+      style: const TextStyle(color: Colors.white, fontSize: 17),
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: AppColors.gold),
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withOpacity(.14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _passwordInput() {
+    return TextField(
+      controller: passwordController,
+      obscureText: obscurePassword,
+      style: const TextStyle(color: Colors.white, fontSize: 17),
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.gold),
+        suffixIcon: IconButton(
+          onPressed: () {
+            setState(() {
+              obscurePassword = !obscurePassword;
+            });
+          },
+          icon: Icon(
+            obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: AppColors.gold,
+          ),
+        ),
+        hintText: 'पासवर्ड / Password',
+        hintStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white.withOpacity(.14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+
+// =========================
+// REGISTRATION CHOICE
+// =========================
+
+class RegistrationChoiceScreen extends StatelessWidget {
+  const RegistrationChoiceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: AppColors.maroon,
+        foregroundColor: Colors.white,
+        title: const Text('पंजीकरण'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            const Text(
+              'पंजीकरण का प्रकार चुनें',
+              style: TextStyle(
+                color: AppColors.darkMaroon,
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            _choiceCard(
+              context,
+              icon: Icons.business,
+              title: 'मालिक पंजीकरण',
+              subtitle: 'संस्था / कंपनी / समाज पदाधिकारी',
+              color: AppColors.maroon,
+              page: const OwnerRegistrationScreen(),
+            ),
+
+            const SizedBox(height: 20),
+
+            _choiceCard(
+              context,
+              icon: Icons.groups,
+              title: 'सार्वजनिक पंजीकरण',
+              subtitle: 'समाज के सामान्य सदस्य',
+              color: AppColors.blue,
+              page: const PublicRegistrationScreen(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _choiceCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required Widget page,
+  }) {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 38,
+              backgroundColor: color,
+              child: Icon(icon, size: 42, color: Colors.white),
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 7),
+
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
+            ),
+
+            const SizedBox(height: 18),
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => page),
+                  );
+                },
+                child: const Text(
+                  'पंजीकरण करें  →',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =========================
+// BILINGUAL FIELD LABELS
+// =========================
+
+String fieldLabel(String field, bool isHindi) {
+  if (isHindi) return field;
+
+  const labels = {
+    'पूरा नाम': 'Full Name',
+    'पिता का नाम': "Father's Name",
+    'गोत्र (कुल)': 'Gotra',
+    'गांव': 'Village',
+    'तहसील': 'Tehsil',
+    'जिला': 'District',
+    'राज्य': 'State',
+    'फर्म / कंपनी / संस्था का नाम': 'Firm / Company / Organization Name',
+    'पूरा पता': 'Full Address',
+    'पिन कोड': 'PIN Code',
+    'मोबाइल नंबर (मुख्य)': 'Primary Mobile Number',
+    'मोबाइल नंबर': 'Mobile Number',
+    'व्हाट्सऐप नंबर (वैकल्पिक)': 'WhatsApp Number (Optional)',
+    'ईमेल आईडी': 'Email Address',
+    'लॉगिन यूज़रनेम (मोबाइल नंबर)': 'Username (Mobile Number)',
+    'लॉगिन पासवर्ड': 'Login Password',
+    'पासवर्ड की पुष्टि करें': 'Confirm Password',
+  };
+
+  return labels[field] ?? field;
+}
+
+String fieldHint(String field, bool isHindi) {
+  if (isHindi) return 'अपना $field लिखें';
+
+  return 'Enter ${fieldLabel(field, false)}';
+}
+
+// =========================
+// REGISTRATION PREVIEW
+// =========================
+
+class RegistrationPreviewScreen extends StatelessWidget {
+  final String registrationType;
+  final Map<String, String> data;
+
+  const RegistrationPreviewScreen({
+    super.key,
+    required this.registrationType,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const maroon = Color(0xFF7A1F2B);
+    const gold = Color(0xFFD4AF37);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F3E8),
+      appBar: AppBar(
+        title: const Text(
+          'पंजीकरण की पुष्टि',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: maroon,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: maroon,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.verified_user, color: gold, size: 48),
+                  const SizedBox(height: 8),
+                  Text(
+                    registrationType,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'कृपया अपनी जानकारी जाँचें',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            ...data.entries.map(
+              (entry) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: gold.withValues(alpha: 0.45)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        entry.key,
+                        style: const TextStyle(
+                          color: maroon,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 6,
+                      child: Text(
+                        entry.value.isEmpty ? '—' : entry.value,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: maroon,
+                      side: const BorderSide(color: maroon),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('पंजीकरण सफलतापूर्वक सबमिट हो गया।'),
+                        ),
+                      );
+
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text('Submit'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: maroon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =========================
+// OWNER REGISTRATION
+// =========================
+
+class OwnerRegistrationScreen extends StatefulWidget {
+  const OwnerRegistrationScreen({super.key});
+
+  @override
+  State<OwnerRegistrationScreen> createState() =>
+      _OwnerRegistrationScreenState();
+}
+
+class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
+  final nameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final gotraController = TextEditingController();
+  final villageController = TextEditingController();
+  final tehsilController = TextEditingController();
+  final districtController = TextEditingController();
+  final organizationController = TextEditingController();
+  final addressController = TextEditingController();
+  final pinCodeController = TextEditingController();
+  final stateController = TextEditingController();
+  final whatsappController = TextEditingController();
+  final emailController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final mobileController = TextEditingController();
+  final usernameAutoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    mobileController.addListener(() {
+      usernameAutoController.text = mobileController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    mobileController.dispose();
+    usernameAutoController.dispose();
+    super.dispose();
+  }
+
+  final fields = [
+    'पूरा नाम',
+    'पिता का नाम',
+    'गोत्र (कुल)',
+    'गांव',
+    'तहसील',
+    'जिला',
+    'फर्म / कंपनी / संस्था का नाम',
+    'पूरा पता',
+    'पिन कोड',
+    'राज्य',
+    'मोबाइल नंबर (मुख्य)',
+    'व्हाट्सऐप नंबर (वैकल्पिक)',
+    'ईमेल आईडी',
+    'लॉगिन यूज़रनेम (मोबाइल नंबर)',
+    'लॉगिन पासवर्ड',
+    'पासवर्ड की पुष्टि करें',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return _registrationForm(
+      context,
+      title: AppLanguage.instance.isHindi ? 'मालिक पंजीकरण' : 'Owner Registration',
+      subtitle: AppLanguage.instance.isHindi
+          ? 'संस्था / कंपनी / समाज पदाधिकारी'
+          : 'Organization / Company / Society Representative',
+      color: AppColors.maroon,
+    );
+  }
+
+  Widget _registrationForm(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        title: Text(title),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: color,
+              child: const Icon(Icons.business, color: Colors.white, size: 40),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            Text(
+              subtitle,
+              style: const TextStyle(color: Colors.black54, fontSize: 15),
+            ),
+
+            const SizedBox(height: 22),
+
+            _languageButtons(color),
+
+            const SizedBox(height: 15),
+
+            ...fields.map(
+              (field) => Padding(
+                padding: const EdgeInsets.only(bottom: 13),
+                child: TextField(
+                  controller: field == 'मोबाइल नंबर (मुख्य)'
+                      ? mobileController
+                      : field.contains('यूज़रनेम')
+                      ? usernameAutoController
+                      : null,
+                  readOnly: field.contains('यूज़रनेम'),
+                  onChanged: field == 'मोबाइल नंबर (मुख्य)'
+                      ? (value) {
+                          usernameAutoController.text = value;
+                        }
+                      : null,
+                  obscureText: field.contains('पासवर्ड'),
+                  decoration: InputDecoration(
+                    labelText: '${fieldLabel(field, AppLanguage.instance.isHindi)} *',
+                    hintText: fieldHint(field, AppLanguage.instance.isHindi),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.visibility),
+                    label: const Text('प्रीव्यू देखें'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.edit),
+                    label: const Text('संपादित करें'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppLanguage.instance.isHindi ? color : Colors.white,
+                  foregroundColor: AppLanguage.instance.isHindi ? Colors.white : color,
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.check_circle),
+                label: const Text(
+                  'सबमिट करें / Submit',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            const Text(
+              'सभी अनिवार्य (*) फील्ड भरना आवश्यक है।',
+              style: TextStyle(color: Colors.black54),
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _languageButtons(Color color) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppLanguage.instance.isHindi ? color : Colors.white,
+              foregroundColor: AppLanguage.instance.isHindi ? Colors.white : color,
+              side: BorderSide(color: color),
+            ),
+            onPressed: () {
+              AppLanguage.instance.setHindi();
+            },
+            child: const Text('हिन्दी'),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: !AppLanguage.instance.isHindi ? color : Colors.white,
+              foregroundColor: !AppLanguage.instance.isHindi ? Colors.white : color,
+              side: BorderSide(color: color),
+            ),
+            onPressed: () {
+              AppLanguage.instance.setEnglish();
+            },
+            child: const Text('English'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// =========================
+// PUBLIC REGISTRATION
+// =========================
+
+class PublicRegistrationScreen extends StatefulWidget {
+  const PublicRegistrationScreen({super.key});
+
+  @override
+  State<PublicRegistrationScreen> createState() =>
+      _PublicRegistrationScreenState();
+}
+
+class _PublicRegistrationScreenState extends State<PublicRegistrationScreen> {
+  final nameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final gotraController = TextEditingController();
+  final villageController = TextEditingController();
+  final tehsilController = TextEditingController();
+  final districtController = TextEditingController();
+  final stateController = TextEditingController();
+  final whatsappController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  final mobileController = TextEditingController();
+  final usernameAutoController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    mobileController.addListener(() {
+      usernameAutoController.text = mobileController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    mobileController.dispose();
+    usernameAutoController.dispose();
+    super.dispose();
+  }
+
+  final fields = [
+    'पूरा नाम',
+    'पिता का नाम',
+    'गोत्र (कुल)',
+    'गांव',
+    'तहसील',
+    'जिला',
+    'राज्य',
+    'मोबाइल नंबर',
+    'व्हाट्सऐप नंबर (वैकल्पिक)',
+    'लॉगिन यूज़रनेम (मोबाइल नंबर)',
+    'लॉगिन पासवर्ड',
+    'पासवर्ड की पुष्टि करें',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    const color = AppColors.blue;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5F8FF),
+      appBar: AppBar(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        title: Text(AppLanguage.instance.isHindi ? 'सार्वजनिक पंजीकरण' : 'Public Registration'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            const CircleAvatar(
+              radius: 35,
+              backgroundColor: AppColors.blue,
+              child: Icon(Icons.groups, color: Colors.white, size: 40),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              'सार्वजनिक पंजीकरण',
+              style: TextStyle(
+                color: AppColors.blue,
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const Text(
+              'समाज के सामान्य सदस्यों के लिए पंजीकरण',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black54, fontSize: 15),
+            ),
+
+            const SizedBox(height: 22),
+
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: color,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () => AppLanguage.instance.setHindi(),
+                    child: const Text('हिन्दी'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: !AppLanguage.instance.isHindi ? color : Colors.white,
+                      foregroundColor: !AppLanguage.instance.isHindi ? Colors.white : color,
+                      side: BorderSide(
+                        color: !AppLanguage.instance.isHindi ? color : Colors.black26,
+                      ),
+                    ),
+                    onPressed: () => AppLanguage.instance.setEnglish(),
+                    child: const Text('English'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 15),
+
+            ...fields.map(
+              (field) => Padding(
+                padding: const EdgeInsets.only(bottom: 13),
+                child: TextField(
+                  controller: field == 'मोबाइल नंबर (मुख्य)'
+                      ? mobileController
+                      : field.contains('यूज़रनेम')
+                      ? usernameAutoController
+                      : null,
+                  readOnly: field.contains('यूज़रनेम'),
+                  onChanged: field == 'मोबाइल नंबर (मुख्य)'
+                      ? (value) {
+                          usernameAutoController.text = value;
+                        }
+                      : null,
+                  obscureText: field.contains('पासवर्ड'),
+                  decoration: InputDecoration(
+                    labelText: '${fieldLabel(field, AppLanguage.instance.isHindi)} *',
+                    hintText: fieldHint(field, AppLanguage.instance.isHindi),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.visibility),
+                    label: const Text('प्रीव्यू देखें'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.edit),
+                    label: const Text('संपादित करें'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.check_circle),
+                label: const Text(
+                  'सबमिट करें / Submit',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =========================
+// DASHBOARD
+// =========================
+
+class DashboardScreen extends StatelessWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.maroon,
+
+      appBar: AppBar(
+        backgroundColor: AppColors.maroon,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
+        title: const Text(
+          'आंजणा कलबी समाज',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {},
+          ),
+          const Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: CircleAvatar(
+              backgroundColor: AppColors.gold,
+              child: Icon(Icons.person, color: AppColors.maroon),
+            ),
+          ),
+        ],
+      ),
+
+      body: Column(
+        children: [
+          // HEADER
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+            decoration: const BoxDecoration(color: AppColors.maroon),
+            child: Column(
+              children: [
+                const Icon(
+                  Icons.account_balance,
+                  color: AppColors.gold,
+                  size: 65,
+                ),
+
+                const SizedBox(height: 6),
+
+                const Text(
+                  'आंजणा कलबी समाज',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 29,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 5),
+
+                const Text(
+                  'जय श्री राजेश्वर भगवान री सा',
+                  style: TextStyle(color: AppColors.lightGold, fontSize: 17),
+                ),
+
+                const SizedBox(height: 10),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.gold),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'एक समाज • एक पहचान • एक परिवार',
+                    style: TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // WHITE CONTENT
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // SEARCH
+                    TextField(
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'नाम, गांव, गोत्र, जिला से खोजें...',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(color: Colors.black12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+                    // WELCOME CARD
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppColors.cream,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: AppColors.lightGold),
+                      ),
+                      child: const Row(
+                        children: [
+                          Text('🙏', style: TextStyle(fontSize: 40)),
+                          SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'स्वागत है!',
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.darkMaroon,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'अपने समाज सेजुड़े रहें और समाज की प्रगति में योगदान दें।',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // STATS
+                    Row(
+                      children: [
+                        _stat('12,458', 'कुल सदस्य', Icons.groups),
+                        _stat('1,245', 'मालिक सदस्य', Icons.business),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        _stat('11,213', 'सार्वजनिक सदस्य', Icons.people),
+                        _stat('34', 'पदाधिकारी', Icons.calendar_month),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+                    // MENU CARDS
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.25,
+                      children: [
+                        _menuCard(
+                          'घोषणाएं',
+                          'समाज की सूचनाएं',
+                          Icons.campaign,
+                          AppColors.maroon,
+                        ),
+                        _menuCard(
+                          'समाज समिति',
+                          'पदाधिकारी एवं समिति',
+                          Icons.groups,
+                          Colors.orange.shade700,
+                        ),
+                        _menuCard(
+                          'आगामी कार्यक्रम',
+                          'बैठक एवं आयोजन',
+                          Icons.event,
+                          AppColors.green,
+                        ),
+                        _menuCard(
+                          'व्यापार निर्देशिका',
+                          'व्यवसाय और सेवाएं',
+                          Icons.business,
+                          AppColors.blue,
+                        ),
+                        _menuCard(
+                          'रक्तदाता सूची',
+                          'आपातकालीन सहायता',
+                          Icons.bloodtype,
+                          Colors.red,
+                        ),
+                        _menuCard(
+                          'गैलरी',
+                          'फोटो और वीडियो',
+                          Icons.photo_library,
+                          Colors.purple,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'हाल की घोषणाएं',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkMaroon,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    _announcement(
+                      'सामूहिक विवाह सम्मेलन',
+                      'समाज के आगामी कार्यक्रम की जानकारी',
+                    ),
+
+                    _announcement(
+                      'राज्य स्तरीय बैठक',
+                      'महत्वपूर्ण समाज बैठक एवं निर्णय',
+                    ),
+
+                    _announcement(
+                      'शैक्षिक सहायता योजना',
+                      'विद्यार्थियों के लिए सहायता जानकारी',
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.darkMaroon,
+        selectedItemColor: AppColors.gold,
+        unselectedItemColor: Colors.white70,
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'होम'),
+          BottomNavigationBarItem(icon: Icon(Icons.groups), label: 'सदस्य'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline),
+            label: 'चैट',
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.campaign), label: 'अपडेट्स'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'प्रोफाइल',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _stat(String number, String title, IconData icon) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFDFDFD),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.black12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.maroon, size: 32),
+            const SizedBox(height: 6),
+            Text(
+              number,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkMaroon,
+              ),
+            ),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _menuCard(String title, String subtitle, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.black12),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: color.withOpacity(.12),
+            child: Icon(icon, color: color, size: 27),
+          ),
+
+          const Spacer(),
+
+          Text(
+            title,
+            style: TextStyle(
+              color: color,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 3),
+
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            'View All  →',
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _announcement(String title, String subtitle) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFBF2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.black12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 55,
+            height: 55,
+            decoration: BoxDecoration(
+              color: AppColors.maroon,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.campaign, color: AppColors.gold, size: 30),
+          ),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(subtitle, style: const TextStyle(color: Colors.black54)),
+              ],
+            ),
+          ),
+
+          const Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: AppColors.maroon,
+          ),
+        ],
+      ),
+    );
+  }
+}

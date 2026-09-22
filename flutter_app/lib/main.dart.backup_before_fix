@@ -1,0 +1,3283 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
+
+// Local Imports
+import 'pincode_service.dart';
+import 'forgot_password.dart';
+import 'admin_panel.dart';
+import 'tabs_screen.dart';
+import 'menu_pages.dart';
+import 'profile_screen.dart';
+
+void main() {
+  runApp(const AnjanaKalbiSamajApp());
+}
+
+// =======================
+// CURRENT USER (Global State)
+// =======================
+
+class CurrentUser {
+  static String name = 'Ramesh Kumar';
+  static String mobile = '9876543210';
+  static String email = 'ramesh@example.com';
+  static String gotra = 'Kalbi';
+  static String fatherName = 'Suresh Kumar';
+  static String village = 'Pune';
+  static String district = 'Pune';
+  static String state = 'Maharashtra';
+  static String pinCode = '411001';
+  static String? imagePath = null;
+  static List<String> roles = ['owner'];
+  static bool isVerified = true;
+  static bool hideDetails = false;
+
+  static String get firstName => name.split(' ').first;
+}
+
+// =======================
+// APP COLORS
+// =======================
+
+class AppColors {
+  static const maroon = Color(0xFF8B0018);
+  static const darkMaroon = Color(0xFF5C0010);
+  static const gold = Color(0xFFFFC400);
+  static const lightGold = Color(0xFFFFE8A3);
+  static const cream = Color(0xFFFFF8E8);
+  static const white = Colors.white;
+  static const blue = Color(0xFF124B8C);
+  static const green = Color(0xFF237A3B);
+}
+
+// =======================
+// APP LANGUAGE (Global State)
+// =======================
+
+class AppLanguage extends ChangeNotifier {
+  static final AppLanguage instance = AppLanguage._();
+  AppLanguage._();
+
+  bool isHindi = false;
+
+  Locale get locale => isHindi ? const Locale('hi') : const Locale('en');
+
+  String t(String hi, String en) => isHindi ? hi : en;
+
+  void setHindi() {
+    if (!isHindi) {
+      isHindi = true;
+      notifyListeners();
+    }
+  }
+
+  void setEnglish() {
+    if (isHindi) {
+      isHindi = false;
+      notifyListeners();
+    }
+  }
+
+  void toggle() {
+    isHindi ? setEnglish() : setHindi();
+  }
+}
+
+// =======================
+// GLOBAL LANGUAGE BUTTON (Small Round)
+// =======================
+
+class GlobalLanguageButton extends StatelessWidget {
+  const GlobalLanguageButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isHindi = AppLanguage.instance.isHindi;
+    return GestureDetector(
+      onTap: () => AppLanguage.instance.toggle(),
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: AppColors.gold,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            isHindi ? 'A' : 'अ',
+            style: const TextStyle(
+              color: AppColors.darkMaroon,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// APP LANGUAGE SHEET (Bottom Sheet)
+// =======================
+
+void showAppLanguageSheet(BuildContext context) {
+  final isHindi = AppLanguage.instance.isHindi;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle Bar
+          Container(
+            width: 50,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Title
+          Text(
+            AppLanguage.instance.t('ऐप की भाषा', 'App Language'),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.darkMaroon,
+            ),
+          ),
+          const SizedBox(height: 25),
+
+          // English Option
+          ListTile(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: !isHindi
+                    ? AppColors.gold.withValues(alpha: 0.2)
+                    : Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                'A',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: !isHindi ? AppColors.maroon : Colors.grey,
+                ),
+              ),
+            ),
+            title: const Text(
+              'English',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            trailing: !isHindi
+                ? const Icon(Icons.check_circle, color: AppColors.green, size: 22)
+                : null,
+            onTap: () {
+              AppLanguage.instance.setEnglish();
+              Navigator.pop(ctx);
+            },
+          ),
+
+          const SizedBox(height: 8),
+
+          // Hindi Option
+          ListTile(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isHindi
+                    ? AppColors.gold.withValues(alpha: 0.2)
+                    : Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                'अ',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isHindi ? AppColors.maroon : Colors.grey,
+                ),
+              ),
+            ),
+            title: const Text(
+              'हिंदी',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            trailing: isHindi
+                ? const Icon(Icons.check_circle, color: AppColors.green, size: 22)
+                : null,
+            onTap: () {
+              AppLanguage.instance.setHindi();
+              Navigator.pop(ctx);
+            },
+          ),
+
+          const SizedBox(height: 10),
+        ],
+      ),
+    ),
+  );
+}
+
+// =======================
+// APP (MaterialApp)
+// =======================
+
+class AnjanaKalbiSamajApp extends StatelessWidget {
+  const AnjanaKalbiSamajApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: AppLanguage.instance,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Anjana Kalbi Samaj',
+          locale: AppLanguage.instance.locale,
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('en'), Locale('hi')],
+          theme: ThemeData(
+            primarySwatch: Colors.brown,
+            scaffoldBackgroundColor: AppColors.darkMaroon,
+            // 🎨 Poppins Font for whole app
+            textTheme: GoogleFonts.poppinsTextTheme(),
+            primaryTextTheme: GoogleFonts.poppinsTextTheme(),
+            fontFamily: 'Poppins',
+          ),
+          home: const SplashScreen(),
+        );
+      },
+    );
+  }
+}
+
+// =======================
+// SPLASH SCREEN
+// =======================
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoFade;
+  late Animation<double> _textFade;
+  late Animation<Offset> _textSlide;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeIn),
+      ),
+    );
+
+    _textFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 0.9, curve: Curves.easeIn),
+      ),
+    );
+
+    _textSlide = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.5, 0.9, curve: Curves.easeOut),
+      ),
+    );
+
+    _controller.forward();
+
+    Timer(const Duration(milliseconds: 3500), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            colors: [AppColors.maroon, AppColors.darkMaroon],
+            center: Alignment.center,
+            radius: 1.2,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 🎬 Logo Animation (Fade + Scale + Glow)
+                FadeTransition(
+                  opacity: _logoFade,
+                  child: ScaleTransition(
+                    scale: _logoScale,
+                    child: Container(
+                      width: 145,
+                      height: 145,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.gold,
+                        border: Border.all(color: Colors.white, width: 4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.gold.withValues(alpha: 0.5),
+                            blurRadius: 30,
+                            spreadRadius: 5,
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.account_balance,
+                          size: 70,
+                          color: AppColors.maroon,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 35),
+
+                // 🎬 Text Animation (Fade + Slide)
+                FadeTransition(
+                  opacity: _textFade,
+                  child: SlideTransition(
+                    position: _textSlide,
+                    child: Column(
+                      children: [
+                        Text(
+                          AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontSize: 31,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          AppLanguage.instance.t('एकता • सेवा • संस्कार', 'Unity • Service • Culture'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 25),
+                        Container(width: 230, height: 1, color: AppColors.gold),
+                        const SizedBox(height: 25),
+                        Text(
+                          AppLanguage.instance.t('समाज की डिजिटल पहचान', 'Digital Identity of Society'),
+                          style: const TextStyle(color: Colors.white, fontSize: 17),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                const SizedBox(
+                  width: 30,
+                  height: 30,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.gold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// LOGIN SCREEN
+// =======================
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final usernameController = TextEditingController();
+  final passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  bool obscurePassword = true;
+
+  void _login() {
+    if (_formKey.currentState!.validate()) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: RadialGradient(
+            colors: [AppColors.maroon, AppColors.darkMaroon],
+            center: Alignment.center,
+            radius: 1.2,
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // 🌐 Global Language Button (Top-Right)
+              const Positioned(
+                top: 12,
+                right: 12,
+                child: GlobalLanguageButton(),
+              ),
+
+              // Main Content
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 50),
+
+                      // 🎬 Logo with Glow
+                      Container(
+                        width: 115,
+                        height: 115,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.gold,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.gold.withValues(alpha: 0.4),
+                              blurRadius: 25,
+                              spreadRadius: 3,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.account_balance,
+                          size: 55,
+                          color: AppColors.maroon,
+                        ),
+                      ),
+
+                      const SizedBox(height: 22),
+
+                      // Title
+                      Text(
+                        AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 29,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+
+                      // 🎴 White Card for Login Form
+                      Container(
+                        padding: const EdgeInsets.all(22),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _input(
+                              controller: usernameController,
+                              hint: AppLanguage.instance.t('मोबाइल नंबर', 'Mobile Number'),
+                              icon: Icons.phone_android,
+                              keyboard: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 18),
+                            _passwordInput(),
+                            const SizedBox(height: 10),
+
+                            // Forgot Password
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  AppLanguage.instance.t('पासवर्ड भूल गए?', 'Forgot Password?'),
+                                  style: const TextStyle(
+                                    color: AppColors.maroon,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // Login Button (Golden Gradient)
+                            SizedBox(
+                              width: double.infinity,
+                              height: 58,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  elevation: 0,
+                                  backgroundColor: Colors.transparent,
+                                ),
+                                onPressed: _login,
+                                child: Ink(
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [AppColors.gold, Color(0xFFFFD54F)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(30),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.gold.withValues(alpha: 0.5),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Container(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      AppLanguage.instance.t('लॉगिन करें', 'Login'),
+                                      style: const TextStyle(
+                                        color: AppColors.darkMaroon,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Register Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLanguage.instance.t('नए सदस्य?', 'New Member?'),
+                            style: const TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const RegistrationChoiceScreen(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              AppLanguage.instance.t('रजिस्टर करें', 'Register'),
+                              style: const TextStyle(
+                                color: AppColors.gold,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Admin Login Link
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminLoginScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Admin Login',
+                          style: TextStyle(
+                            color: Colors.white38,
+                            fontSize: 14,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Footer
+                      Text(
+                        AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+                        style: const TextStyle(color: Colors.white24, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _input({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboard,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboard,
+      style: const TextStyle(color: AppColors.darkMaroon, fontSize: 16),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) {
+          return AppLanguage.instance.t('यह फ़ील्ड आवश्यक है', 'This field is required');
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: AppColors.maroon),
+        hintText: hint,
+        hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.maroon, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _passwordInput() {
+    return TextFormField(
+      controller: passwordController,
+      obscureText: obscurePassword,
+      style: const TextStyle(color: AppColors.darkMaroon, fontSize: 16),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return AppLanguage.instance.t('पासवर्ड आवश्यक है', 'Password is required');
+        }
+        if (value.length < 4) {
+          return AppLanguage.instance.t('कम से कम 4 अक्षर', 'Minimum 4 characters');
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        prefixIcon: const Icon(Icons.lock_outline, color: AppColors.maroon),
+        suffixIcon: IconButton(
+          onPressed: () {
+            setState(() {
+              obscurePassword = !obscurePassword;
+            });
+          },
+          icon: Icon(
+            obscurePassword ? Icons.visibility_off : Icons.visibility,
+            color: AppColors.maroon,
+          ),
+        ),
+        hintText: AppLanguage.instance.t('पासवर्ड', 'Password'),
+        hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+        filled: true,
+        fillColor: Colors.grey.shade100,
+        contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.maroon, width: 1.5),
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// ANIMATED BORDER CARD (Rainbow Glow)
+// =======================
+
+class AnimatedBorderCard extends StatefulWidget {
+  final Widget child;
+  final List<Color> colors;
+  final double borderRadius;
+  final Duration duration;
+
+  const AnimatedBorderCard({
+    super.key,
+    required this.child,
+    this.colors = const [
+      Color(0xFFFF0000), // Red
+      Color(0xFFFFA500), // Orange
+      Color(0xFFFFFF00), // Yellow
+      Color(0xFF00FF00), // Green
+      Color(0xFF00BFFF), // Sky Blue
+      Color(0xFF8A2BE2), // Purple
+    ],
+    this.borderRadius = 22,
+    this.duration = const Duration(seconds: 4),
+  });
+
+  @override
+  State<AnimatedBorderCard> createState() => _AnimatedBorderCardState();
+}
+
+class _AnimatedBorderCardState extends State<AnimatedBorderCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.all(3), // Border thickness
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            gradient: SweepGradient(
+              colors: [...widget.colors, widget.colors.first],
+              transform: GradientRotation(_controller.value * 2 * 3.14159),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.colors.first.withValues(alpha: 0.4),
+                blurRadius: 15,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: child,
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(widget.borderRadius - 2),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// =======================
+// REGISTRATION CHOICE
+// =======================
+
+class RegistrationChoiceScreen extends StatelessWidget {
+  const RegistrationChoiceScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: AppColors.maroon,
+        foregroundColor: Colors.white,
+        title: Text(
+          AppLanguage.instance.t('पंजीकरण', 'Registration'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            Text(
+              AppLanguage.instance.t('पंजीकरण का प्रकार चुनें', 'Select Registration Type'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.darkMaroon,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Owner Registration Card (Maroon + Gold)
+            AnimatedBorderCard(
+              colors: const [
+                AppColors.maroon,
+                AppColors.gold,
+                AppColors.lightGold,
+                AppColors.maroon,
+              ],
+              child: _choiceCardInner(
+                context,
+                icon: Icons.business,
+                title: AppLanguage.instance.t('मालिक पंजीकरण', 'Owner Registration'),
+                subtitle: AppLanguage.instance.t(
+                  'संस्था / कंपनी / समाज पदाधिकारी',
+                  'Organization / Company / Society Representative',
+                ),
+                color: AppColors.maroon,
+                page: const OwnerRegistrationScreen(),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // Public Registration Card (Blue + Gold)
+            AnimatedBorderCard(
+              colors: const [
+                AppColors.blue,
+                AppColors.gold,
+                AppColors.lightGold,
+                AppColors.blue,
+              ],
+              child: _choiceCardInner(
+                context,
+                icon: Icons.groups,
+                title: AppLanguage.instance.t('सार्वजनिक पंजीकरण', 'Public Registration'),
+                subtitle: AppLanguage.instance.t(
+                  'समाज के सामान्य सदस्य',
+                  'General Member of Society',
+                ),
+                color: AppColors.blue,
+                page: const PublicRegistrationScreen(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _choiceCardInner(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required Widget page,
+  }) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 38,
+            backgroundColor: color.withValues(alpha: 0.15),
+            child: Icon(icon, size: 42, color: color),
+          ),
+
+          const SizedBox(height: 15),
+
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: color,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 7),
+
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 15, color: Colors.black54),
+          ),
+
+          const SizedBox(height: 18),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 4,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => page),
+                );
+              },
+              icon: const Icon(Icons.arrow_forward),
+              label: Text(
+                AppLanguage.instance.t('पंजीकरण करें', 'Register'),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// =======================
+// BUSINESS MODEL
+// =======================
+
+class Business {
+  String name;
+  String address;
+  String city;
+  String state;
+  String pin;
+
+  Business({
+    this.name = '',
+    this.address = '',
+    this.city = '',
+    this.state = '',
+    this.pin = '',
+  });
+}
+
+// =======================
+// OWNER REGISTRATION
+// =======================
+
+class OwnerRegistrationScreen extends StatefulWidget {
+  const OwnerRegistrationScreen({super.key});
+
+  @override
+  State<OwnerRegistrationScreen> createState() => _OwnerRegistrationScreenState();
+}
+
+class _OwnerRegistrationScreenState extends State<OwnerRegistrationScreen> {
+  // Personal Info
+  final nameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final gotraController = TextEditingController();
+
+  // Permanent Address
+  final permVillageController = TextEditingController();
+  final permPanchayatController = TextEditingController();
+  final permPanchayatSamitiController = TextEditingController();
+  final permDistrictController = TextEditingController();
+  final permStateController = TextEditingController();
+  final permPinController = TextEditingController();
+
+  // Current Address
+  final currAddressController = TextEditingController();
+  final currCityController = TextEditingController();
+  final currStateController = TextEditingController();
+  final currPinController = TextEditingController();
+
+  // Business Info
+  final businessAddressController = TextEditingController();
+  final businessCityController = TextEditingController();
+  final businessStateController = TextEditingController();
+  final businessPinController = TextEditingController();
+
+  // Login Info
+  final mobileController = TextEditingController();
+  final whatsappController = TextEditingController();
+  final emailController = TextEditingController();
+  final usernameAutoController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  // Checkbox States
+  bool sameAsPermanent = false;
+  bool businessSameAsCurrent = false;
+
+  // Business List (Multiple)
+  final List<Business> businesses = [Business()];
+
+  // Password Visibility
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
+}
+
+  // =======================
+  // INIT STATE — 4 PIN LISTENERS
+  // =======================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1. Mobile → Username Auto-fill
+    mobileController.addListener(() {
+      usernameAutoController.text = mobileController.text;
+    });
+
+    // 2. Permanent PIN → District + State
+    permPinController.addListener(() {
+      if (permPinController.text.length == 6) {
+        PincodeService.loadData().then((_) {
+          if (PincodeService.isValid(permPinController.text)) {
+            setState(() {
+              permDistrictController.text = PincodeService.getCity(permPinController.text);
+              permStateController.text = PincodeService.getState(permPinController.text);
+            });
+          }
+        });
+      }
+    });
+
+    // 3. Current PIN → City + State
+    currPinController.addListener(() {
+      if (currPinController.text.length == 6) {
+        PincodeService.loadData().then((_) {
+          if (PincodeService.isValid(currPinController.text)) {
+            setState(() {
+              currCityController.text = PincodeService.getCity(currPinController.text);
+              currStateController.text = PincodeService.getState(currPinController.text);
+            });
+          }
+        });
+      }
+    });
+
+    // 4. Business PIN → Business City + State
+    businessPinController.addListener(() {
+      if (businessPinController.text.length == 6) {
+        PincodeService.loadData().then((_) {
+          if (PincodeService.isValid(businessPinController.text)) {
+            setState(() {
+              businessCityController.text = PincodeService.getCity(businessPinController.text);
+              businessStateController.text = PincodeService.getState(businessPinController.text);
+            });
+          }
+        });
+      }
+    });
+  }
+
+  // =======================
+  // DISPOSE
+  // =======================
+
+  @override
+  void dispose() {
+    mobileController.dispose();
+    usernameAutoController.dispose();
+    super.dispose();
+  }
+
+  // =======================
+  // COPY FUNCTIONS
+  // =======================
+
+  void _copyPermanentToCurrent() {
+    setState(() {
+      currAddressController.text =
+          '${permVillageController.text}, ${permPanchayatController.text}';
+      currCityController.text = permDistrictController.text;
+      currStateController.text = permStateController.text;
+      currPinController.text = permPinController.text;
+    });
+  }
+
+  void _copyCurrentToBusiness() {
+    setState(() {
+      businessAddressController.text = currAddressController.text;
+      businessCityController.text = currCityController.text;
+      businessStateController.text = currStateController.text;
+      businessPinController.text = currPinController.text;
+    });
+  }
+
+  // =======================
+  // BUILD METHOD
+  // =======================
+
+  @override
+  Widget build(BuildContext context) {
+    return _registrationForm(
+      context,
+      title: AppLanguage.instance.t('मालिक पंजीकरण', 'Owner Registration'),
+      subtitle: AppLanguage.instance.t(
+        'संस्था / कंपनी / समाज पदाधिकारी',
+        'Organization / Company / Society Representative',
+      ),
+      color: AppColors.maroon,
+    );
+  }
+
+  Widget _registrationForm(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: color,
+              child: const Icon(Icons.business, color: Colors.white, size: 40),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              title,
+              style: TextStyle(color: color, fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54, fontSize: 15),
+            ),
+
+            const SizedBox(height: 22),
+
+            // Section 1: Personal Information
+            _buildSection('Personal Information', Icons.person, AppColors.maroon, [
+              'पूरा नाम',
+              'पिता का नाम',
+              'गोत्र (कुल)',
+            ]),
+
+            const SizedBox(height: 18),
+
+            // Section 2: Permanent Address
+            _buildSection('Permanent Address', Icons.home, AppColors.green, [
+              'गाँव',
+              'पंचायत',
+              'पंचायत समिति',
+              'जिला',
+              'राज्य',
+              'पिन कोड',
+            ]),
+
+            const SizedBox(height: 18),
+
+            // Section 3: Current Address + Checkbox
+            _buildSection(
+              'Current Address',
+              Icons.location_on,
+              Colors.orange,
+              [
+                'वर्तमान पता',
+                'शहर',
+                'वर्तमान राज्य',
+                'वर्तमान पिन कोड',
+              ],
+              extraWidget: Row(
+                children: [
+                  Checkbox(
+                    value: sameAsPermanent,
+                    activeColor: color,
+                    onChanged: (v) {
+                      setState(() => sameAsPermanent = v ?? false);
+                      if (sameAsPermanent) _copyPermanentToCurrent();
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLanguage.instance.t(
+                        'स्थायी पते के समान',
+                        'Same as Permanent Address',
+                      ),
+                      style: TextStyle(color: color, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Section 4: Business Information + Checkbox
+            _buildSection(
+              'Business Information',
+              Icons.business,
+              AppColors.gold,
+              [
+                'व्यवसाय का नाम',
+                'व्यवसाय का पता',
+                'व्यवसाय का शहर',
+                'व्यवसाय का राज्य',
+                'व्यवसाय का पिन कोड',
+              ],
+              extraWidget: Row(
+                children: [
+                  Checkbox(
+                    value: businessSameAsCurrent,
+                    activeColor: color,
+                    onChanged: (v) {
+                      setState(() => businessSameAsCurrent = v ?? false);
+                      if (businessSameAsCurrent) _copyCurrentToBusiness();
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLanguage.instance.t(
+                        'वर्तमान पते के समान',
+                        'Same as Current Address',
+                      ),
+                      style: TextStyle(color: color, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Section 5: Login Information
+            _buildSection('Login Information', Icons.lock, AppColors.maroon, [
+              'मोबाइल नंबर (मुख्य)',
+              'व्हाट्सएप नंबर (वैकल्पिक)',
+              'ईमेल एड्रेस',
+              'लॉगिन यूजरनेम (मोबाइल नंबर)',
+              'लॉगिन पासवर्ड',
+              'पासवर्ड की पुष्टि करें',
+            ]),
+
+            const SizedBox(height: 20),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 6,
+                ),
+                onPressed: () {
+                  if (nameController.text.trim().isEmpty ||
+                      mobileController.text.trim().isEmpty ||
+                      loginPasswordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLanguage.instance.t(
+                            'कृपया नाम, मोबाइल और पासवर्ड भरें',
+                            'Please fill Name, Mobile and Password',
+                          ),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  if (loginPasswordController.text != confirmPasswordController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLanguage.instance.t(
+                            'पासवर्ड मेल नहीं खाते',
+                            'Passwords do not match!',
+                          ),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.check_circle),
+                label: Text(
+                  AppLanguage.instance.t('सबमिट करें', 'Submit'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              AppLanguage.instance.t(
+                '(*) फ़ील्ड भरना आवश्यक है।',
+                '(*) Fields are required.',
+              ),
+              style: const TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =======================
+  // SECTION BUILDER HELPER
+  // =======================
+
+  Widget _buildSection(
+    String title,
+    IconData icon,
+    Color color,
+    List<String> sectionFields, {
+    Widget? extraWidget,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 🌈 Gradient Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withValues(alpha: 0.75)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 📝 White Body
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (extraWidget != null) extraWidget,
+                ...sectionFields.map(
+                  (field) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildField(field),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =======================
+  // FIELD BUILDER (Auto Controller Mapping)
+  // =======================
+
+  Widget _buildField(String field) {
+    final isHindi = AppLanguage.instance.isHindi;
+    final isUsername = field.contains('यूजरनेम');
+    final isPassword = field.contains('पासवर्ड');
+    final isWhatsapp = field.contains('व्हाट्सएप');
+
+    TextEditingController? controller;
+    TextInputType keyboard = TextInputType.text;
+
+    // Controller Mapping
+    if (field == 'पूरा नाम') {
+      controller = nameController;
+    } else if (field == 'पिता का नाम') {
+      controller = fatherNameController;
+    } else if (field == 'गोत्र (कुल)') {
+      controller = gotraController;
+    } else if (field == 'गाँव') {
+      controller = permVillageController;
+    } else if (field == 'पंचायत') {
+      controller = permPanchayatController;
+    } else if (field == 'पंचायत समिति') {
+      controller = permPanchayatSamitiController;
+    } else if (field == 'जिला') {
+      controller = permDistrictController;
+    } else if (field == 'राज्य') {
+      controller = permStateController;
+    } else if (field == 'पिन कोड') {
+      controller = permPinController;
+      keyboard = TextInputType.number;
+    } else if (field == 'वर्तमान पता') {
+      controller = currAddressController;
+    } else if (field == 'शहर') {
+      controller = currCityController;
+    } else if (field == 'वर्तमान राज्य') {
+      controller = currStateController;
+    } else if (field == 'वर्तमान पिन कोड') {
+      controller = currPinController;
+      keyboard = TextInputType.number;
+    } else if (field == 'व्यवसाय का पता') {
+      controller = businessAddressController;
+    } else if (field == 'व्यवसाय का शहर') {
+      controller = businessCityController;
+    } else if (field == 'व्यवसाय का राज्य') {
+      controller = businessStateController;
+    } else if (field == 'व्यवसाय का पिन कोड') {
+      controller = businessPinController;
+      keyboard = TextInputType.number;
+    } else if (field == 'मोबाइल नंबर (मुख्य)') {
+      controller = mobileController;
+      keyboard = TextInputType.phone;
+    } else if (field == 'व्हाट्सएप नंबर (वैकल्पिक)') {
+      controller = whatsappController;
+      keyboard = TextInputType.phone;
+    } else if (field == 'ईमेल एड्रेस') {
+      controller = emailController;
+      keyboard = TextInputType.emailAddress;
+    } else if (isUsername) {
+      controller = usernameAutoController;
+    } else if (field.contains('पुष्टि')) {
+      controller = confirmPasswordController;
+    } else if (isPassword) {
+      controller = loginPasswordController;
+    }
+
+    return TextField(
+      controller: controller,
+      readOnly: isUsername,
+      keyboardType: keyboard,
+      obscureText: isPassword || field.contains('पुष्टि') ? (isPassword ? obscurePassword : obscureConfirmPassword) : false,
+      decoration: InputDecoration(
+        labelText: '${fieldLabel(field, isHindi)}${isWhatsapp ? "" : " *"}',
+        hintText: fieldHint(field, isHindi),
+        prefixIcon: isUsername
+            ? const Icon(Icons.lock, color: Colors.grey)
+            : null,
+        suffixIcon: (isPassword || field.contains('पुष्टि'))
+            ? IconButton(
+                icon: Icon(
+                  (isPassword ? obscurePassword : obscureConfirmPassword)
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: AppColors.maroon,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (isPassword) {
+                      obscurePassword = !obscurePassword;
+                    } else {
+                      obscureConfirmPassword = !obscureConfirmPassword;
+                    }
+                  });
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: isUsername ? Colors.grey.shade200 : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+    );
+  }
+}
+
+// =======================
+// BILINGUAL FIELD LABELS
+// =======================
+
+String fieldLabel(String field, bool isHindi) {
+  if (isHindi) return field;
+
+  const labels = {
+    'पूरा नाम': 'Full Name',
+    'पिता का नाम': "Father's Name",
+    'गोत्र (कुल)': 'Gotra (Clan)',
+    'गाँव': 'Village',
+    'पंचायत': 'Panchayat',
+    'पंचायत समिति': 'Panchayat Samiti',
+    'जिला': 'District',
+    'राज्य': 'State',
+    'पिन कोड': 'PIN Code',
+    'वर्तमान पता': 'Current Address',
+    'शहर': 'City',
+    'वर्तमान राज्य': 'Current State',
+    'वर्तमान पिन कोड': 'Current PIN Code',
+    'व्यवसाय का नाम': 'Business Name',
+    'व्यवसाय का पता': 'Business Address',
+    'व्यवसाय का शहर': 'Business City',
+    'व्यवसाय का राज्य': 'Business State',
+    'व्यवसाय का पिन कोड': 'Business PIN Code',
+    'मोबाइल नंबर (मुख्य)': 'Primary Mobile Number',
+    'व्हाट्सएप नंबर (वैकल्पिक)': 'WhatsApp Number (Optional)',
+    'ईमेल एड्रेस': 'Email Address',
+    'लॉगिन यूजरनेम (मोबाइल नंबर)': 'Username (Mobile Number)',
+    'लॉगिन पासवर्ड': 'Login Password',
+    'पासवर्ड की पुष्टि करें': 'Confirm Password',
+  };
+
+  return labels[field] ?? field;
+}
+
+String fieldHint(String field, bool isHindi) {
+  if (isHindi) return 'अपना $field लिखें';
+  return 'Enter ${fieldLabel(field, false)}';
+}
+
+// =======================
+// PUBLIC REGISTRATION
+// =======================
+
+class PublicRegistrationScreen extends StatefulWidget {
+  const PublicRegistrationScreen({super.key});
+
+  @override
+  State<PublicRegistrationScreen> createState() => _PublicRegistrationScreenState();
+}
+
+class _PublicRegistrationScreenState extends State<PublicRegistrationScreen> {
+  // Personal Info
+  final nameController = TextEditingController();
+  final fatherNameController = TextEditingController();
+  final gotraController = TextEditingController();
+
+  // Permanent Address
+  final permVillageController = TextEditingController();
+  final permPanchayatController = TextEditingController();
+  final permPanchayatSamitiController = TextEditingController();
+  final permDistrictController = TextEditingController();
+  final permStateController = TextEditingController();
+  final permPinController = TextEditingController();
+
+  // Current Address
+  final currAddressController = TextEditingController();
+  final currCityController = TextEditingController();
+  final currStateController = TextEditingController();
+  final currPinController = TextEditingController();
+
+  // Login Info
+  final mobileController = TextEditingController();
+  final whatsappController = TextEditingController();
+  final emailController = TextEditingController();
+  final usernameAutoController = TextEditingController();
+  final loginPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  // Checkbox State
+  bool sameAsPermanent = false;
+
+  // Password Visibility
+  bool obscurePassword = true;
+  bool obscureConfirmPassword = true;
+
+  // =======================
+  // INIT STATE — 3 LISTENERS
+  // =======================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1. Mobile → Username Auto-fill
+    mobileController.addListener(() {
+      usernameAutoController.text = mobileController.text;
+    });
+
+    // 2. Permanent PIN → District + State
+    permPinController.addListener(() {
+      if (permPinController.text.length == 6) {
+        PincodeService.loadData().then((_) {
+          if (PincodeService.isValid(permPinController.text)) {
+            setState(() {
+              permDistrictController.text = PincodeService.getCity(permPinController.text);
+              permStateController.text = PincodeService.getState(permPinController.text);
+            });
+          }
+        });
+      }
+    });
+
+    // 3. Current PIN → City + State
+    currPinController.addListener(() {
+      if (currPinController.text.length == 6) {
+        PincodeService.loadData().then((_) {
+          if (PincodeService.isValid(currPinController.text)) {
+            setState(() {
+              currCityController.text = PincodeService.getCity(currPinController.text);
+              currStateController.text = PincodeService.getState(currPinController.text);
+            });
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    mobileController.dispose();
+    usernameAutoController.dispose();
+    super.dispose();
+  }
+
+  // =======================
+  // COPY FUNCTION
+  // =======================
+
+  void _copyPermanentToCurrent() {
+    setState(() {
+      currAddressController.text =
+          '${permVillageController.text}, ${permPanchayatController.text}';
+      currCityController.text = permDistrictController.text;
+      currStateController.text = permStateController.text;
+      currPinController.text = permPinController.text;
+    });
+  }
+
+  // =======================
+  // BUILD METHOD
+  // =======================
+
+  @override
+  Widget build(BuildContext context) {
+    return _registrationForm(
+      context,
+      title: AppLanguage.instance.t('सार्वजनिक पंजीकरण', 'Public Registration'),
+      subtitle: AppLanguage.instance.t(
+        'समाज के सामान्य सदस्यों के लिए पंजीकरण',
+        'Registration for general members of society',
+      ),
+      color: AppColors.blue,
+    );
+  }
+
+  Widget _registrationForm(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: color,
+              child: const Icon(Icons.groups, color: Colors.white, size: 40),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              title,
+              style: TextStyle(color: color, fontSize: 25, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54, fontSize: 15),
+            ),
+
+            const SizedBox(height: 22),
+
+            // Section 1: Personal Information
+            _buildSection('Personal Information', Icons.person, AppColors.blue, [
+              'पूरा नाम',
+              'पिता का नाम',
+              'गोत्र (कुल)',
+            ]),
+
+            const SizedBox(height: 18),
+
+            // Section 2: Permanent Address
+            _buildSection('Permanent Address', Icons.home, AppColors.green, [
+              'गाँव',
+              'पंचायत',
+              'पंचायत समिति',
+              'जिला',
+              'राज्य',
+              'पिन कोड',
+            ]),
+
+            const SizedBox(height: 18),
+
+            // Section 3: Current Address + Checkbox
+            _buildSection(
+              'Current Address',
+              Icons.location_on,
+              Colors.orange,
+              [
+                'वर्तमान पता',
+                'शहर',
+                'वर्तमान राज्य',
+                'वर्तमान पिन कोड',
+              ],
+              extraWidget: Row(
+                children: [
+                  Checkbox(
+                    value: sameAsPermanent,
+                    activeColor: color,
+                    onChanged: (v) {
+                      setState(() => sameAsPermanent = v ?? false);
+                      if (sameAsPermanent) _copyPermanentToCurrent();
+                    },
+                  ),
+                  Expanded(
+                    child: Text(
+                      AppLanguage.instance.t(
+                        'स्थायी पते के समान',
+                        'Same as Permanent Address',
+                      ),
+                      style: TextStyle(color: color, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Section 4: Login Information
+            _buildSection('Login Information', Icons.lock, AppColors.blue, [
+              'मोबाइल नंबर (मुख्य)',
+              'व्हाट्सएप नंबर (वैकल्पिक)',
+              'ईमेल एड्रेस',
+              'लॉगिन यूजरनेम (मोबाइल नंबर)',
+              'लॉगिन पासवर्ड',
+              'पासवर्ड की पुष्टि करें',
+            ]),
+
+            const SizedBox(height: 20),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  elevation: 6,
+                ),
+                onPressed: () {
+                  if (nameController.text.trim().isEmpty ||
+                      mobileController.text.trim().isEmpty ||
+                      loginPasswordController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLanguage.instance.t(
+                            'कृपया नाम, मोबाइल और पासवर्ड भरें',
+                            'Please fill Name, Mobile and Password',
+                          ),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  if (loginPasswordController.text != confirmPasswordController.text) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          AppLanguage.instance.t(
+                            'पासवर्ड मेल नहीं खाते',
+                            'Passwords do not match!',
+                          ),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                    (route) => false,
+                  );
+                },
+                icon: const Icon(Icons.check_circle),
+                label: Text(
+                  AppLanguage.instance.t('सबमिट करें', 'Submit'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            Text(
+              AppLanguage.instance.t(
+                '(*) फ़ील्ड भरना आवश्यक है।',
+                '(*) Fields are required.',
+              ),
+              style: const TextStyle(color: Colors.black54, fontSize: 12),
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =======================
+  // SECTION BUILDER HELPER
+  // =======================
+
+  Widget _buildSection(
+    String title,
+    IconData icon,
+    Color color,
+    List<String> sectionFields, {
+    Widget? extraWidget,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color, color.withValues(alpha: 0.75)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 18),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (extraWidget != null) extraWidget,
+                ...sectionFields.map(
+                  (field) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildField(field),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =======================
+  // FIELD BUILDER (Auto Controller Mapping)
+  // =======================
+
+  Widget _buildField(String field) {
+    final isHindi = AppLanguage.instance.isHindi;
+    final isUsername = field.contains('यूजरनेम');
+    final isPassword = field.contains('लॉगिन पासवर्ड');
+    final isConfirm = field.contains('पुष्टि');
+    final isWhatsapp = field.contains('व्हाट्सएप');
+
+    TextEditingController? controller;
+    TextInputType keyboard = TextInputType.text;
+
+    if (field == 'पूरा नाम') {
+      controller = nameController;
+    } else if (field == 'पिता का नाम') {
+      controller = fatherNameController;
+    } else if (field == 'गोत्र (कुल)') {
+      controller = gotraController;
+    } else if (field == 'गाँव') {
+      controller = permVillageController;
+    } else if (field == 'पंचायत') {
+      controller = permPanchayatController;
+    } else if (field == 'पंचायत समिति') {
+      controller = permPanchayatSamitiController;
+    } else if (field == 'जिला') {
+      controller = permDistrictController;
+    } else if (field == 'राज्य') {
+      controller = permStateController;
+    } else if (field == 'पिन कोड') {
+      controller = permPinController;
+      keyboard = TextInputType.number;
+    } else if (field == 'वर्तमान पता') {
+      controller = currAddressController;
+    } else if (field == 'शहर') {
+      controller = currCityController;
+    } else if (field == 'वर्तमान राज्य') {
+      controller = currStateController;
+    } else if (field == 'वर्तमान पिन कोड') {
+      controller = currPinController;
+      keyboard = TextInputType.number;
+    } else if (field == 'मोबाइल नंबर (मुख्य)') {
+      controller = mobileController;
+      keyboard = TextInputType.phone;
+    } else if (field == 'व्हाट्सएप नंबर (वैकल्पिक)') {
+      controller = whatsappController;
+      keyboard = TextInputType.phone;
+    } else if (field == 'ईमेल एड्रेस') {
+      controller = emailController;
+      keyboard = TextInputType.emailAddress;
+    } else if (isUsername) {
+      controller = usernameAutoController;
+    } else if (isConfirm) {
+      controller = confirmPasswordController;
+    } else if (isPassword) {
+      controller = loginPasswordController;
+    }
+
+    return TextField(
+      controller: controller,
+      readOnly: isUsername,
+      keyboardType: keyboard,
+      obscureText: isPassword ? obscurePassword : (isConfirm ? obscureConfirmPassword : false),
+      decoration: InputDecoration(
+        labelText: '${fieldLabel(field, isHindi)}${isWhatsapp ? "" : " *"}',
+        hintText: fieldHint(field, isHindi),
+        prefixIcon: isUsername ? const Icon(Icons.lock, color: Colors.grey) : null,
+        suffixIcon: (isPassword || isConfirm)
+            ? IconButton(
+                icon: Icon(
+                  (isPassword ? obscurePassword : obscureConfirmPassword)
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  color: AppColors.maroon,
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (isPassword) {
+                      obscurePassword = !obscurePassword;
+                    } else {
+                      obscureConfirmPassword = !obscureConfirmPassword;
+                    }
+                  });
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: isUsername ? Colors.grey.shade200 : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      ),
+    );
+  }
+}
+
+// =======================
+// REGISTRATION PREVIEW
+// =======================
+
+class RegistrationPreviewScreen extends StatelessWidget {
+  final String registrationType;
+  final Map<String, String> data;
+
+  const RegistrationPreviewScreen({
+    super.key,
+    required this.registrationType,
+    required this.data,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const maroon = Color(0xFF7A1F2B);
+    const gold = Color(0xFFD4AF37);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F3E8),
+      appBar: AppBar(
+        backgroundColor: maroon,
+        foregroundColor: Colors.white,
+        title: Text(
+          AppLanguage.instance.t('पंजीकरण की पुष्टि', 'Registration Confirmation'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Confirmation Card
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: maroon,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.verified_user, color: gold, size: 48),
+                  const SizedBox(height: 8),
+                  Text(
+                    registrationType,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppLanguage.instance.t(
+                      'कृपया अपनी जानकारी जांचें',
+                      'Please check your information',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Data Cards
+            ...data.entries.map(
+              (entry) => Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: gold.withValues(alpha: 0.45)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        entry.key,
+                        style: const TextStyle(
+                          color: maroon,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 6,
+                      child: Text(
+                        entry.value.isEmpty ? '-' : entry.value,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Edit + Submit Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.edit),
+                    label: Text(AppLanguage.instance.t('संशोधित करें', 'Edit')),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: maroon,
+                      side: const BorderSide(color: maroon),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLanguage.instance.t(
+                              'पंजीकरण सफलतापूर्वक सबमिट हो गया!',
+                              'Registration submitted successfully!',
+                            ),
+                          ),
+                          backgroundColor: AppColors.green,
+                        ),
+                      );
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    icon: const Icon(Icons.check_circle),
+                    label: Text(AppLanguage.instance.t('सबमिट करें', 'Submit')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: maroon,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =======================
+// DASHBOARD SCREEN (Part 1)
+// =======================
+
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _tabs = const [
+    SizedBox.shrink(), // 0: Home
+    MembersScreen(),   // 1: Members
+    ChatScreen(),      // 2: Chat
+    UpdatesScreen(),   // 3: Updates
+    ProfileScreen(),   // 4: Profile
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.maroon,
+      drawer: _buildDrawer(context),
+      appBar: AppBar(
+        backgroundColor: AppColors.maroon,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        title: Text(
+          AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+              );
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                );
+              },
+              child: const CircleAvatar(
+                backgroundColor: AppColors.gold,
+                child: Icon(Icons.person, color: AppColors.maroon),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: _buildBody(),
+      bottomNavigationBar: _buildUniqueBottomNav(),
+    );
+  }
+
+  // =======================
+  // UNIQUE BOTTOM NAV
+  // =======================
+
+  Widget _buildUniqueBottomNav() {
+    return SizedBox(
+      height: 90,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Bottom Bar
+          Positioned(
+            bottom: 0,
+            left: 12,
+            right: 12,
+            child: Container(
+              height: 70,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.darkMaroon, AppColors.maroon],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _navItem(Icons.home_outlined, Icons.home, 0),
+                  _navItem(Icons.groups_outlined, Icons.groups, 1),
+                  const SizedBox(width: 60), // Center gap
+                  _navItem(Icons.campaign_outlined, Icons.campaign, 3),
+                  _navItem(Icons.person_outline, Icons.person, 4),
+                ],
+              ),
+            ),
+          ),
+
+          // Center Big Button (Chat)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ChatPlaceholderScreen()),
+                  );
+                },
+                child: Container(
+                  width: 65,
+                  height: 65,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [AppColors.gold, Color(0xFFFFD54F)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.6),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(Icons.chat_bubble, color: AppColors.darkMaroon, size: 30),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, IconData activeIcon, int index) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        if (index == 0) {
+          setState(() => _currentIndex = 0);
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => _tabs[index]),
+          );
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isSelected ? 14 : 8,
+          vertical: 6,
+        ),
+        decoration: isSelected
+            ? BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              )
+            : null,
+        child: Icon(
+          isSelected ? activeIcon : icon,
+          color: isSelected ? AppColors.gold : Colors.white60,
+          size: 24,
+        ),
+      ),
+    );
+  }
+
+  // =======================
+  // DRAWER
+  // =======================
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.horizontal(right: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          // 🌈 Gradient Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 40, 20, 22),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.darkMaroon, AppColors.maroon],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.account_balance, color: AppColors.maroon, size: 30),
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+                  style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${CurrentUser.name} • ${CurrentUser.mobile}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // MAIN Section
+          _drawerSectionLabel(AppLanguage.instance.t('मुख्य', 'MAIN')),
+          _drawerTile(Icons.home, AppLanguage.instance.t('होम', 'Home'), AppColors.maroon, () {
+            Navigator.pop(context);
+          }),
+          _drawerTile(Icons.person, AppLanguage.instance.t('मेरी प्रोफाइल', 'My Profile'), AppColors.blue, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          }),
+          _drawerTile(Icons.notifications, AppLanguage.instance.t('सूचनाएं', 'Notifications'), Colors.orange, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+          }),
+          _drawerTile(Icons.groups, AppLanguage.instance.t('सदस्य', 'Members'), AppColors.green, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const MembersScreen()));
+          }),
+
+          const SizedBox(height: 10),
+
+          // COMMITTEE Section
+          _drawerSectionLabel(AppLanguage.instance.t('समिति', 'COMMITTEE')),
+          _drawerTile(Icons.workspace_premium, AppLanguage.instance.t('अध्यक्ष', 'Adhyaksh'), AppColors.gold, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPlaceholderScreen()));
+          }),
+          _drawerTile(Icons.military_tech, AppLanguage.instance.t('उपाध्यक्ष', 'Upadhyaksh'), AppColors.blue, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPlaceholderScreen()));
+          }),
+          _drawerTile(Icons.account_balance_wallet, AppLanguage.instance.t('कोषाध्यक्ष', 'Koshadhyaksh'), AppColors.green, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPlaceholderScreen()));
+          }),
+          _drawerTile(Icons.work, AppLanguage.instance.t('मैनेजर', 'Manager'), Colors.purple, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPlaceholderScreen()));
+          }),
+
+          const SizedBox(height: 10),
+
+          // OTHERS Section
+          _drawerSectionLabel(AppLanguage.instance.t('अन्य', 'OTHERS')),
+          _drawerTile(Icons.admin_panel_settings, AppLanguage.instance.t('एडमिन लॉगिन', 'Admin Login'), Colors.purple, () {
+            Navigator.pop(context);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminLoginScreen()));
+          }),
+          _drawerTile(Icons.info_outline, AppLanguage.instance.t('के बारे में', 'About'), Colors.teal, () {
+            Navigator.pop(context);
+          }),
+          _drawerTile(Icons.language, AppLanguage.instance.t('ऐप की भाषा', 'App Language'), AppColors.gold, () {
+            Navigator.pop(context);
+            showAppLanguageSheet(context);
+          }),
+
+          const Spacer(),
+          const Divider(),
+
+          // Logout
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.logout, color: Colors.red, size: 20),
+            ),
+            title: Text(
+              AppLanguage.instance.t('लॉगआउट', 'Logout'),
+              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  Widget _drawerSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerTile(IconData icon, String title, Color color, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  // =======================
+  // BODY (Part 2 में पूरा होगा)
+  // =======================
+
+  // =======================
+  // BODY (Part 2)
+  // =======================
+
+  Widget _buildBody() {
+    return Column(
+      children: [
+        // HEADER
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 22),
+          decoration: const BoxDecoration(color: AppColors.maroon),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.account_balance,
+                color: AppColors.gold,
+                size: 65,
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                AppLanguage.instance.t('आंजना कल्बी समाज', 'Anjana Kalbi Samaj'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 29,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 5),
+
+              Text(
+                AppLanguage.instance.t('जय श्री राजेश्वर भगवान री सा', 'Jai Shri Rajeshwar Bhagwan Ri Sa'),
+                style: const TextStyle(color: AppColors.lightGold, fontSize: 17),
+              ),
+
+              const SizedBox(height: 10),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.gold),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  AppLanguage.instance.t(
+                    'एक समाज • एक पहचान • एक परिवार',
+                    'One Society • One Identity • One Family',
+                  ),
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // WHITE CONTENT
+        Expanded(
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // SEARCH
+                  TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: AppLanguage.instance.t(
+                        'नाम, गाँव, गोत्र, जिला से खोजें...',
+                        'Search by name, village, gotra, district...',
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: const BorderSide(color: Colors.black12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // WELCOME CARD
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.cream,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.lightGold),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🙏', style: TextStyle(fontSize: 40)),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                AppLanguage.instance.t(
+                                  'स्वागत है, ${CurrentUser.firstName}! 👋',
+                                  'Welcome, ${CurrentUser.firstName}! 👋',
+                                ),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.darkMaroon,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                AppLanguage.instance.t(
+                                  'अपने समाज से जुड़े रहें और समाज की प्रगति में योगदान दें।',
+                                  'Stay connected with your society and contribute to its progress.',
+                                ),
+                                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // STATS ROW 1
+                  Row(
+                    children: [
+                      _stat('12,458', AppLanguage.instance.t('कुल सदस्य', 'Total Members'), Icons.groups),
+                      const SizedBox(width: 10),
+                      _stat('1,245', AppLanguage.instance.t('मालिक सदस्य', 'Owner Members'), Icons.business),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // STATS ROW 2
+                  Row(
+                    children: [
+                      _stat('11,213', AppLanguage.instance.t('सार्वजनिक सदस्य', 'Public Members'), Icons.people),
+                      const SizedBox(width: 10),
+                      _stat('34', AppLanguage.instance.t('पदाधिकारी', 'Officials'), Icons.calendar_month),
+                    ],
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // MENU CARDS
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.85,
+                    children: [
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('घोषणाएं', 'Announcements'),
+                        subtitle: AppLanguage.instance.t('समाज की सूचनाएं', 'Society Updates'),
+                        icon: Icons.campaign,
+                        color: AppColors.maroon,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Announcements',
+                              color: AppColors.maroon,
+                              icon: Icons.campaign,
+                              items: [
+                                {'title': 'Mass Marriage Conference', 'subtitle': 'Upcoming society event'},
+                                {'title': 'State Level Meeting', 'subtitle': 'Important meeting'},
+                                {'title': 'Educational Assistance', 'subtitle': 'For students'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('समाज समिति', 'Society Committee'),
+                        subtitle: AppLanguage.instance.t('पदाधिकारी एवं समिति', 'Officials and Committee'),
+                        icon: Icons.groups,
+                        color: Colors.orange.shade700,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Society Committee',
+                              color: Colors.orange,
+                              icon: Icons.groups,
+                              items: [
+                                {'title': 'Ramesh Kumar', 'subtitle': 'President • 9876543210'},
+                                {'title': 'Suresh Patil', 'subtitle': 'Secretary • 9876543211'},
+                                {'title': 'Mahesh Jadhav', 'subtitle': 'Treasurer • 9876543212'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('आगामी कार्यक्रम', 'Upcoming Events'),
+                        subtitle: AppLanguage.instance.t('बैठक एवं कार्यक्रम', 'Meetings and Events'),
+                        icon: Icons.event,
+                        color: AppColors.green,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Upcoming Events',
+                              color: AppColors.green,
+                              icon: Icons.event,
+                              items: [
+                                {'title': 'Annual General Meeting', 'subtitle': '25 Dec 2025 • 10:00 AM'},
+                                {'title': 'Cultural Program', 'subtitle': '15 Jan 2026 • 6:00 PM'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('व्यापार निर्देशिका', 'Business Directory'),
+                        subtitle: AppLanguage.instance.t('व्यवसाय और सेवाएं', 'Business and Services'),
+                        icon: Icons.business,
+                        color: AppColors.blue,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Business Directory',
+                              color: AppColors.blue,
+                              icon: Icons.business,
+                              items: [
+                                {'title': 'Patil Electronics', 'subtitle': 'Pune • 9876543210'},
+                                {'title': 'Jadhav Textiles', 'subtitle': 'Satara • 9876543211'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('रक्तदाता सूची', 'Blood Donor List'),
+                        subtitle: AppLanguage.instance.t('आपातकालीन सहायता', 'Emergency Assistance'),
+                        icon: Icons.bloodtype,
+                        color: Colors.red,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Blood Donor List',
+                              color: Colors.red,
+                              icon: Icons.bloodtype,
+                              items: [
+                                {'title': 'O+ Donor', 'subtitle': 'Ramesh • 9876543210'},
+                                {'title': 'A+ Donor', 'subtitle': 'Suresh • 9876543211'},
+                                {'title': 'B+ Donor', 'subtitle': 'Mahesh • 9876543212'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                      PressableMenuCard(
+                        title: AppLanguage.instance.t('गैलरी', 'Gallery'),
+                        subtitle: AppLanguage.instance.t('फोटो और वीडियो', 'Photos and Videos'),
+                        icon: Icons.photo_library,
+                        color: Colors.purple,
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(
+                            builder: (_) => const MenuListScreen(
+                              title: 'Gallery',
+                              color: Colors.purple,
+                              icon: Icons.photo_library,
+                              items: [
+                                {'title': 'Annual Function 2024', 'subtitle': '120 Photos'},
+                                {'title': 'Sports Day 2024', 'subtitle': '85 Photos'},
+                              ],
+                            ),
+                          ));
+                        },
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // RECENT ANNOUNCEMENTS
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      AppLanguage.instance.t('हाल की घोषणाएं', 'Recent Announcements'),
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.darkMaroon,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  _announcement(
+                    AppLanguage.instance.t('सामूहिक विवाह सम्मेलन', 'Mass Marriage Conference'),
+                    AppLanguage.instance.t('समाज के आगामी कार्यक्रम की जानकारी', 'Upcoming society event information'),
+                  ),
+                  _announcement(
+                    AppLanguage.instance.t('राज्य स्तरीय बैठक', 'State Level Meeting'),
+                    AppLanguage.instance.t('महत्वपूर्ण समाज बैठक एवं निर्णय', 'Important society meeting and decisions'),
+                  ),
+                  _announcement(
+                    AppLanguage.instance.t('शैक्षिक सहायता योजना', 'Educational Assistance Scheme'),
+                    AppLanguage.instance.t('विद्यार्थियों के लिए सहायता जानकारी', 'Assistance information for students'),
+                  ),
+
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =======================
+  // STAT HELPER
+  // =======================
+
+  Widget _stat(String number, String title, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(
+            left: BorderSide(color: AppColors.maroon, width: 4),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.maroon.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.maroon.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: AppColors.maroon, size: 20),
+                ),
+                const Icon(Icons.more_horiz, color: Colors.black26, size: 18),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              number,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkMaroon,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 11, color: Colors.black54, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+}
+
+// =======================
+// CHAT PLACEHOLDER SCREEN
+// =======================
+
+class ChatPlaceholderScreen extends StatelessWidget {
+  const ChatPlaceholderScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        backgroundColor: AppColors.maroon,
+        foregroundColor: Colors.white,
+        title: Text(AppLanguage.instance.t('जल्द आ रहा है', 'Coming Soon')),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.construction, size: 80, color: AppColors.maroon.withValues(alpha: 0.5)),
+            const SizedBox(height: 20),
+            Text(
+              AppLanguage.instance.t('यह सुविधा जल्द आ रही है!', 'This feature is coming soon!'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.darkMaroon),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppLanguage.instance.t('कृपया प्रतीक्षा करें', 'Please wait'),
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// =======================
+// PRESSABLE MENU CARD (Tap Animation)
+// =======================
+
+class PressableMenuCard extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const PressableMenuCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<PressableMenuCard> createState() => _PressableMenuCardState();
+}
+
+class _PressableMenuCardState extends State<PressableMenuCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [widget.color, widget.color.withValues(alpha: 0.75)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(widget.icon, color: widget.color, size: 22),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.arrow_forward, color: Colors.white, size: 14),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        color: widget.color,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11, color: Colors.black54, height: 1.3),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

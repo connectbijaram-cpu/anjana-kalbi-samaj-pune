@@ -1,0 +1,17 @@
+{
+  "411001": {"city": "Pune", "state": "Maharashtra", "villages": ["Shivajinagar", "Camp", "Koregaon Park"]},
+  "411002": {"city": "Pune", "state": "Maharashtra", "villages": ["Bhavani Peth", "Kasba Peth"]},
+  "411003": {"city": "Pune", "state": "Maharashtra", "villages": ["Aundh", "Baner"]},
+  "411004": {"city": "Pune", "state": "Maharashtra", "villages": ["Kothrud", "Karve Nagar"]},
+  "411005": {"city": "Pune", "state": "Maharashtra", "villages": ["Hadapsar", "Mundhwa"]},
+  "415001": {"city": "Satara", "state": "Maharashtra", "villages": ["Satara City", "Powai Naka"]},
+  "416001": {"city": "Kolhapur", "state": "Maharashtra", "villages": ["Rajarampuri", "Laxmipuri"]},
+  "413001": {"city": "Solapur", "state": "Maharashtra", "villages": ["Solapur City", "Akkalkot Road"]},
+  "422001": {"city": "Nashik", "state": "Maharashtra", "villages": ["Panchavati", "Gangapur Road"]},
+  "400001": {"city": "Mumbai", "state": "Maharashtra", "villages": ["Fort", "Churchgate"]},
+  "110001": {"city": "New Delhi", "state": "Delhi", "villages": ["Connaught Place", "Janpath"]},
+  "560001": {"city": "Bangalore", "state": "Karnataka", "villages": ["MG Road", "Brigade Road"]},
+  "380001": {"city": "Ahmedabad", "state": "Gujarat", "villages": ["Lal Darwaja", "Relief Road"]},
+  "302001": {"city": "Jaipur", "state": "Rajasthan", "villages": ["MI Road", "Johari Bazar"]},
+  "700001": {"city": "Kolkata", "state": "West Bengal", "villages": ["BBD Bagh", "Dalhousie"]}
+}
